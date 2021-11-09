@@ -52,10 +52,8 @@ console.log('path1', path1);
 const pathRoot = path.resolve('./');
 console.log('pathRoot:', pathRoot);
 
-// fs.readFile(path.resolve(__dirname, 'settings.json'), 'UTF-8',
-// 	(x) => {
-// 		console.log('got x', x);
-// 	});
+const packageRootPath = path.resolve(__dirname); // stores cache (aka ranWith)
+const projectRootPath = path.resolve('./'); // store default override settings
 
 // const SrcIndex = require("./examples/cf-index-built.js");
 // const SrcIndex = require("./examples/funcs-index.js");
