@@ -45,13 +45,17 @@ if (!options.path) {
 const path1 = path.resolve(__dirname);
 console.log('path1', path1);
 
+// another way:
+// const dirName = path.dirname(require.main.filename);
+// console.log('dirName', dirName);
+
+const pathRoot = path.resolve('./');
+console.log('pathRoot:', pathRoot);
+
 // fs.readFile(path.resolve(__dirname, 'settings.json'), 'UTF-8',
 // 	(x) => {
 // 		console.log('got x', x);
 // 	});
-
-const dirName = path.dirname(require.main.filename);
-console.log('dirName', dirName);
 
 // const SrcIndex = require("./examples/cf-index-built.js");
 // const SrcIndex = require("./examples/funcs-index.js");
@@ -79,7 +83,7 @@ try {
 	// let rawdata = fs.readFileSync(path.resolve(__dirname, '/cache/last-run-with.json'), 'utf8');
 	let rawdata = fs.readFileSync(path.resolve(__dirname, 'cache/last-run-with.json'));
 	// path.resolve(__dirname, '/cache/last-run-with.json')
-	console.log('rawdata', rawdata);
+	// console.log('rawdata', rawdata);
 
 	let parsed = null;
 	if (rawdata) {
