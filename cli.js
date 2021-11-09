@@ -7,8 +7,46 @@ console.log('👋');
 const [env, name, ...args] = process.argv;
 console.log('args:', args);
 
+const { program } = require('commander');
+program.version('0.0.1');
+
+// TEST - args
+// set
+program
+	.option('-d, --debug', 'output extra debugging')
+	.option('-s, --small', 'small pizza size')
+	.option('-pi, --pizza-type <type>', 'flavour of pizza')
+	.option('-p, --path <path>', 'path');
+// parse
+program.parse(process.argv);
+// see
+const options = program.opts();
+if (options.debug) console.log(options);
+console.log('pizza details:');
+if (options.small) console.log('- small pizza size');
+if (options.pizzaType) console.log(`- ${options.pizzaType}`);
+if (options.path) console.log(`- ${options.path}`);
+//
+//
+//
+
+if (!options.path) {
+	console.log('no path!');
+	return;
+}
+
 // const SrcIndex = require("./examples/cf-index-built.js");
-const SrcIndex = require("./examples/funcs-index.js");
+// const SrcIndex = require("./examples/funcs-index.js");
+
+let SrcIndex = null;
+try {
+	SrcIndex = require(options.path);
+} catch (e) {
+	console.log('no index source file');
+	return;
+}
+
+// const SrcIndex = require(options.path);
 const exportedFuncs = Object.keys(SrcIndex);
 // console.log('exportedFuncs:', exportedFuncs);
 

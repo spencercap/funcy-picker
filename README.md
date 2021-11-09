@@ -22,6 +22,11 @@ TODO
 	- ON = `npm link`
 	- OFF = `npm unlink`
 
+# testing
+
+for testing what the parts of the npm install will be run:
+`npm pack --dry-run`
+
 ---
 ## resources
 - https://medium.com/netscape/a-guide-to-create-a-nodejs-command-line-package-c2166ad0452e

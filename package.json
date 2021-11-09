@@ -1,10 +1,10 @@
 {
   "name": "funcy-picker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "pick which firebase cloud functions to deploy with a command line app",
   "author": "@spencercap",
   "license": "MIT",
-  "main": "./index.js",
+  "main": "./cli.js",
   "scripts": {
     "test": "./cli.js argo",
     "link": "npm link",
@@ -15,14 +15,10 @@
     "funcy-picker": "./cli.js"
   },
   "files": [
-    "bin/",
-    "src/",
-    "templates/",
-    "index.js",
     "cli.js"
   ],
   "dependencies": {
-    "esm": "^3.2.25",
+    "commander": "^8.3.0",
     "inquirer": "^8.2.0"
   },
   "repository": {
