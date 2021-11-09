@@ -25,3 +25,4 @@ TODO
 ---
 ## resources
 - https://medium.com/netscape/a-guide-to-create-a-nodejs-command-line-package-c2166ad0452e
+- https://www.twilio.com/blog/how-to-build-a-cli-with-node-js (video)

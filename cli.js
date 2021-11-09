@@ -14,11 +14,63 @@ const exportedFuncs = Object.keys(SrcIndex);
 
 const inquirer = require('inquirer');
 const { exec } = require("child_process");
+const fs = require('fs');
+// const { parse } = require("path");
 
 const choices = exportedFuncs.map(x => {
 	return { name: x }
 });
 // console.log('choices', choices);
+
+// test read from cache
+try {
+	let rawdata = fs.readFileSync('./cache/last-run-with.json');
+	let parsed = null;
+	if (rawdata) {
+		parsed = JSON.parse(rawdata);
+		console.log('parsed:', parsed);
+
+		for (let [i, c] of choices.entries()) {
+			// c.name
+			for (let cPrev of parsed.ranWith) {
+				if (c.name == cPrev) {
+					// replace choice w choice selected!
+					choices.splice(i, 1, {
+						name: c.name,
+						checked: true
+					});
+				}
+			}
+		}
+	}
+} catch (e) {
+	// return;
+	console.log('no previous call cache');
+}
+
+
+// fs.readFile('./cache/last-run-with.json', (err, data) => {
+// 	// if (err) throw err;
+// 	if (err) return;
+
+// 	parsed = JSON.parse(data);
+// 	console.log('parsed:', parsed);
+
+// 	for (let [i, c] of choices.entries()) {
+// 		// c.name
+// 		for (let cPrev of parsed.ranWith) {
+// 			if (c.name == cPrev) {
+// 				// replace choice w choice selected!
+// 				choices.splice(i, 1, {
+// 					name: c.name,
+// 					checked: true
+// 				});
+// 			}
+// 		}
+// 	}
+// });
+
+// console.log('choices:', choices);
 
 inquirer
 	.prompt([
@@ -50,8 +102,11 @@ inquirer
 			const command = `firebase deploy --only functions:${funcsAsCommaList}`;
 			console.log('command:', command);
 
+			// samples
 			// exec("ls -la", (error, stdout, stderr) => {
 			// exec("ls", (error, stdout, stderr) => {
+			/*
+			// real:
 			exec(command, (error, stdout, stderr) => {
 				if (error) {
 					console.log(`error: ${error.message}`);
@@ -63,12 +118,38 @@ inquirer
 				}
 				console.log(`stdout: ${stdout}`);
 			});
+			*/
 
 			// for (const func of answer['selectedFunctions']) {
 			// 	console.log('f', func);
 			// }
 
 			// TODO write to local cache which options we used last time and pre-select those for next time
+
+			// Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.
+			fs.mkdir('./cache', { recursive: true }, (err) => {
+				if (err) throw err;
+			});
+
+			// fs.writeFile(
+			// 	'./cache/last-run-with.js',
+			// 	`// funcsAsCommaList: ${funcsAsCommaList}`,
+			// 	function (err) {
+			// 		if (err) return console.log(err);
+			// 		console.log('wrote file');
+			// 	}
+			// );
+
+			fs.writeFile(
+				'./cache/last-run-with.json',
+				JSON.stringify({
+					ranWith: funcs
+				}),
+				function (err) {
+					if (err) return console.log(err);
+					console.log('wrote file');
+				}
+			);
 		}
 	});
 
