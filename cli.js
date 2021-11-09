@@ -8,7 +8,7 @@ const [env, name, ...args] = process.argv;
 console.log('args:', args);
 
 // const SrcIndex = require("./examples/cf-index-built.js");
-const SrcIndex = require("./examples/index.js");
+const SrcIndex = require("./examples/funcs-index.js");
 const exportedFuncs = Object.keys(SrcIndex);
 // console.log('exportedFuncs:', exportedFuncs);
 

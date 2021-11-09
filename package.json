@@ -4,7 +4,7 @@
   "description": "pick which firebase cloud functions to deploy with a command line app",
   "author": "@spencercap",
   "license": "MIT",
-  "main": "./cli.js",
+  "main": "./index.js",
   "scripts": {
     "test": "./cli.js argo",
     "link": "npm link",
@@ -14,7 +14,15 @@
   "bin": {
     "funcy-picker": "./cli.js"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/",
+    "index.js",
+    "cli.js"
+  ],
   "dependencies": {
+    "esm": "^3.2.25",
     "inquirer": "^8.2.0"
   },
   "repository": {
