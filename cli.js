@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+const inquirer = require('inquirer');
+const { exec } = require("child_process");
+const fs = require('fs');
+const path = require('path');
+// const { parse } = require("path");
+
 // start
 console.log('👋');
 
@@ -35,6 +41,18 @@ if (!options.path) {
 	return;
 }
 
+
+const path1 = path.resolve(__dirname);
+console.log('path1', path1);
+
+// fs.readFile(path.resolve(__dirname, 'settings.json'), 'UTF-8',
+// 	(x) => {
+// 		console.log('got x', x);
+// 	});
+
+const dirName = path.dirname(require.main.filename);
+console.log('dirName', dirName);
+
 // const SrcIndex = require("./examples/cf-index-built.js");
 // const SrcIndex = require("./examples/funcs-index.js");
 
@@ -49,11 +67,6 @@ try {
 // const SrcIndex = require(options.path);
 const exportedFuncs = Object.keys(SrcIndex);
 // console.log('exportedFuncs:', exportedFuncs);
-
-const inquirer = require('inquirer');
-const { exec } = require("child_process");
-const fs = require('fs');
-// const { parse } = require("path");
 
 const choices = exportedFuncs.map(x => {
 	return { name: x }
