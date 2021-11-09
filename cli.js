@@ -75,7 +75,12 @@ const choices = exportedFuncs.map(x => {
 
 // test read from cache
 try {
-	let rawdata = fs.readFileSync('./cache/last-run-with.json');
+	// let rawdata = fs.readFileSync('./cache/last-run-with.json');
+	// let rawdata = fs.readFileSync(path.resolve(__dirname, '/cache/last-run-with.json'), 'utf8');
+	let rawdata = fs.readFileSync(path.resolve(__dirname, 'cache/last-run-with.json'));
+	// path.resolve(__dirname, '/cache/last-run-with.json')
+	console.log('rawdata', rawdata);
+
 	let parsed = null;
 	if (rawdata) {
 		parsed = JSON.parse(rawdata);
@@ -185,7 +190,8 @@ inquirer
 			// TODO write to local cache which options we used last time and pre-select those for next time
 
 			// Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.
-			fs.mkdir('./cache', { recursive: true }, (err) => {
+			// fs.mkdir('./cache', { recursive: true }, (err) => {
+			fs.mkdir(path.resolve(__dirname, 'cache'), { recursive: true }, (err) => {
 				if (err) throw err;
 			});
 
@@ -199,7 +205,8 @@ inquirer
 			// );
 
 			fs.writeFile(
-				'./cache/last-run-with.json',
+				// './cache/last-run-with.json',
+				path.resolve(__dirname, 'cache/last-run-with.json'),
 				JSON.stringify({
 					ranWith: funcs
 				}),
