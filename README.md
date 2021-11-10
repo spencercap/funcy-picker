@@ -2,6 +2,10 @@
 
 pick which firebase cloud functions to deploy with a command line app
 
+# demo
+
+![demo](./demo.gif)
+
 # usage
 
 TODO
