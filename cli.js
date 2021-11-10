@@ -36,6 +36,19 @@ program.version(packageVersion); // set version BEFORE options
 // read built functions ouput
 const projectJson = require(path.resolve(projectRootPath, 'package.json'));
 // const projectVersion = packageJson.version;
+
+// is it a TS or JS project?
+let projectType = 'js'; // or 'ts'
+let buildScriptName = 'build'; // configurable in settings.json but usually its "build"
+if ('devDependencies' in projectJson) {
+	// console.log('projectJson.devDependencies', projectJson.devDependencies);
+	if ('typescript' in projectJson.devDependencies) {
+		projectType = 'ts';
+	}
+}
+console.log('projectType:', projectType);
+
+// get prj main js
 const projectMainJs = projectJson.main;
 console.log('projectMainJs', projectMainJs);
 if (projectMainJs) {
@@ -67,7 +80,9 @@ program
 	.option('-d, --debug', 'output extra debugging')
 	.option('-s, --small', 'small pizza size')
 	.option('-pi, --pizza-type <type>', 'flavour of pizza')
-	.option('-p, --path <path>', 'path');
+	.option('-p, --path <path>', 'path')
+	.option('-b, --build-prj <buildPrj>', 'build project?'); // defaults to YES build the project's function IF its written in TS, otherwise just read the .js
+
 // parse
 program.parse(process.argv);
 // see
