@@ -25,7 +25,7 @@ const projectRootPath = path.resolve('./'); // store default override settings
 
 // read package
 // const pjson = require('./package.json');
-const packageJson = require(path.resolve(packageRootPath, './package.json'));
+const packageJson = require(path.resolve(packageRootPath, 'package.json'));
 const packageVersion = packageJson.version;
 console.log('packageVersion', packageVersion);
 // program.version('0.0.1'); // hard coded
@@ -34,7 +34,7 @@ program.version(packageVersion); // set version BEFORE options
 
 //
 // read built functions ouput
-const projectJson = require(path.resolve(projectRootPath, './package.json'));
+const projectJson = require(path.resolve(projectRootPath, 'package.json'));
 // const projectVersion = packageJson.version;
 const projectMainJs = packageJson.main;
 console.log('projectMainJs', projectMainJs);
