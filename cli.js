@@ -47,6 +47,9 @@ if ('devDependencies' in projectJson) {
 	}
 }
 console.log('projectType:', projectType);
+// TODO
+// const projectTypeOverride = option.projectTypeOverride; // 'js' | 'ts' from cli args OR settings.json
+// projectType = projectTypeOverride;
 
 // get prj main js
 const projectMainJs = projectJson.main;
@@ -228,7 +231,7 @@ inquirer
 			// samples
 			// exec("ls -la", (error, stdout, stderr) => {
 			// exec("ls", (error, stdout, stderr) => {
-			/*
+
 			// real:
 			exec(command, (error, stdout, stderr) => {
 				if (error) {
@@ -241,7 +244,7 @@ inquirer
 				}
 				console.log(`stdout: ${stdout}`);
 			});
-			*/
+
 
 			// for (const func of answer['selectedFunctions']) {
 			// 	console.log('f', func);
