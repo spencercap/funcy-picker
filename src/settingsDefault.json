@@ -3,5 +3,5 @@
 	"path": "dist/index.js",
 	"isTypescript": false,
 	"typeOverride": "js",
-	"one": 1
+	"userSettings": "settings.json"
 }

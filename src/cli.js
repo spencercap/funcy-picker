@@ -35,14 +35,16 @@ program.version(packageVersion); // FYI set version BEFORE options/args
 
 //
 // default settings
-const settingsDefaultJson = require(path.resolve(packageRootPath, 'src/settings.json'));
+const settingsDefaultJson = require(path.resolve(packageRootPath, 'src/settingsDefault.json'));
 // console.log('settingsDefaultJson', settingsDefaultJson);
+const settings = settingsDefaultJson;
 
 //
-// define cli options/args
+// inline settings
 program
 	.option('-d, --debug', 'debug mode on')
-	.option('-p, --path <path>', 'functions\' index.js path')
+	.option('-s, --settings-path <path>', 'user settings path (default: ./settings.json)') // relative to project
+	.option('-p, --index-path <path>', 'functions\' index.js path')
 	// TODO add
 	// 		- cache dir ("cache/")
 	// 		-
@@ -50,6 +52,28 @@ program
 // parse args
 program.parse(process.argv);
 const options = program.opts();
+
+//
+// user settings
+let settingsUser = null;
+try {
+	const userSettingsPath = path.resolve(projectRootPath, options.settingsPath || 'settings.json');
+	console.log('userSettingsPath', userSettingsPath);
+	settingsUser = require(userSettingsPath);
+
+	if (settingsUser) {
+		console.log('user settings:', settingsUser);
+
+		for (let [sKey, sVal] of Object.entries(settingsUser)) {
+			settings[sKey] = sVal;
+		}
+	}
+} catch (e) {
+	// console.log('no user settings...');
+	// its ok
+}
+
+console.log('using settings:', settings);
 
 //
 // read PROJECT package.json (for main ouput index.js path)
@@ -115,7 +139,7 @@ if (options.debug) {
 	// using these settings: ...
 };
 
-if (options.path) {
+if (options.indexPath) {
 	// TODO override default path + settings.json configured path w inline cli arg
 	console.log('override path w cli arg');
 	// set path...
