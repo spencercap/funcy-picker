@@ -1,14 +1,18 @@
 # funcy-picker
 
-pick which firebase cloud functions to deploy with a command line app
+a CLI app that lets you choose which firebase cloud functions to deploy.
 
-# demo
+-   works with JS or TS based cloud function codebases
 
 ![demo](./demo.gif)
 
 # usage
 
 TODO
+
+-   default settings are:
+    ...
+-   these settings can be overwritten via your own `funcy-settings.json` at the root of your directory (peer to `package.json`) OR via command line arguments (which take precedence)
 
 # how to CLI
 
@@ -30,12 +34,13 @@ TODO
     - ON = `npm link`
     - OFF = `npm unlink`
 
-# testing
-
-for testing what the parts of the npm install will be run:
-`npm pack --dry-run`
-
 ---
+
+## notes
+
+-   for dev use in a firebase functions codebase (thus requires `firebase` as a peer dependency)
+-   for testing what the parts of the npm install will be run:
+    `npm pack --dry-run`
 
 ## resources
 
