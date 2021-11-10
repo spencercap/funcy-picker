@@ -243,7 +243,9 @@ inquirer
 					return;
 				}
 				console.log(`stdout: ${stdout}`);
-			});
+			}).stdout.pipe(process.stdout);
+			// pipe logs to project's logs
+			// exec('coffee -cw my_file.coffee').stdout.pipe(process.stdout);
 
 
 			// for (const func of answer['selectedFunctions']) {

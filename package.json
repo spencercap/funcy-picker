@@ -1,6 +1,6 @@
 {
 	"name": "funcy-picker",
-	"version": "1.0.9",
+	"version": "1.0.10",
 	"description": "pick which firebase cloud functions to deploy with a command line app",
 	"author": "@spencercap",
 	"license": "MIT",
