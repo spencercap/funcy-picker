@@ -146,7 +146,8 @@ if (indexJsPath == 'auto') {
 		let projectMainJsPath = projectJson.main;
 		// console.log('projectMainJsPath', projectMainJsPath);
 		if (projectMainJsPath.substring(0, 2) == '..') {
-			throw 'what are you doing building to outside your root directory?';
+			console.log('what are you doing building to outside your root directory?');
+			return;
 		} else if (projectMainJsPath.substring(0, 1) == '.') {
 			// handle "./file.js" OR "file.js"
 			// lop off relative "." for path resolve use
@@ -162,7 +163,8 @@ if (indexJsPath == 'auto') {
 		// console.log('projectMainJsPath', projectMainJsPath);
 		indexJsPath = projectMainJsPath;
 	} else {
-		throw 'couldnt find indexPath automatically...';
+		console.log('couldnt find indexPath automatically...');
+		return;
 	}
 }
 
@@ -174,7 +176,8 @@ try {
 	// console.log('indexJsPath:', indexJsPath);
 	indexJs = require(indexJsPath);
 } catch (e) {
-	throw 'couldnt find indexJs (file w cloud functions in js)'
+	console.log('couldnt find indexJs (file w JS cloud functions)');
+	return;
 }
 
 

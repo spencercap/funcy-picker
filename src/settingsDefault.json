@@ -1,9 +1,8 @@
 {
-	"indexPath": "dist/index.js",
+	"indexPath": "auto",
 	"projectType": "auto",
+	"funcyCacheFile": "funcy-cache.json",
 
 	"tsBuild": true,
-	"tsBuildScriptName": "build",
-
-	"funcyCacheFile": "funcy-cache.json"
+	"tsBuildScriptName": "build"
 }
