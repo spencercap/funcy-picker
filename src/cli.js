@@ -37,13 +37,16 @@ program.version(packageVersion); // FYI set version BEFORE options/args
 // default settings
 const settingsDefaultJson = require(path.resolve(packageRootPath, 'src/settingsDefault.json'));
 // console.log('settingsDefaultJson', settingsDefaultJson);
+const validSettings = Object.keys(settingsDefaultJson);
+
+// 1. start w default settings
 const settings = settingsDefaultJson;
 
 //
 // inline settings
 program
 	.option('-d, --debug', 'debug mode on')
-	.option('-s, --settings-path <path>', 'user settings path (default: ./settings.json)') // relative to project
+	.option('-s, --settings-path <path>', 'user settings path (default: ./funcy-settings.json)') // relative to project
 	.option('-p, --index-path <path>', 'functions\' index.js path')
 	// TODO add
 	// 		- cache dir ("cache/")
@@ -57,115 +60,159 @@ const options = program.opts();
 // user settings
 let settingsUser = null;
 try {
-	const userSettingsPath = path.resolve(projectRootPath, options.settingsPath || 'settings.json');
-	console.log('userSettingsPath', userSettingsPath);
+	// use provide inline settings.json path OR the usual name + place
+	const userSettingsPath = path.resolve(projectRootPath, options.settingsPath || 'funcy-settings.json');
+	// console.log('userSettingsPath', userSettingsPath);
 	settingsUser = require(userSettingsPath);
+} catch (e) {
+	// console.log('no user settings...');
+	// its ok, use default or inline settings
+}
 
-	if (settingsUser) {
-		console.log('user settings:', settingsUser);
-
-		for (let [sKey, sVal] of Object.entries(settingsUser)) {
+//
+// 2. override w user settings
+if (settingsUser) {
+	// console.log('user settings:', settingsUser);
+	for (let [sKey, sVal] of Object.entries(settingsUser)) {
+		// exclude commands we dont know / care about (easy hack)
+		if (validSettings.includes(sKey)) {
 			settings[sKey] = sVal;
 		}
 	}
-} catch (e) {
-	// console.log('no user settings...');
-	// its ok
 }
 
-console.log('using settings:', settings);
+//
+// 3. override w inline arg settings
+for (let [sKey, sVal] of Object.entries(options)) {
+	// exclude commands we dont know / care about (like --help, -V, or hacks) (easy hack)
+	if (validSettings.includes(sKey)) {
+		settings[sKey] = sVal;
+	}
+}
+// end of settings config
+// console.log('FINAL settings:', settings);
 
 //
 // read PROJECT package.json (for main ouput index.js path)
 const projectJson = require(path.resolve(projectRootPath, 'package.json'));
-const projectMainJsPath = projectJson.main;
-// console.log('projectMainJsPath', projectMainJsPath);
-if (projectMainJsPath) {
-	if (projectMainJsPath.substring(0, 2) == '..') {
-		console.log('what are you doing building to outside your root directory?');
-		return;
-	} else if (projectMainJsPath.substring(0, 1) == '..') {
-		// lop off relative "." for path resolve use
-		projectMainJsPath = projectMainJsPath.substring(1);
+
+//
+let projectType = settings.projectType; // auto | js | ts
+if (projectType == 'auto') {
+	// automatically find if project is TS or JS
+	let inferredProjectType = 'js';
+	if ('devDependencies' in projectJson) {
+		// console.log('projectJson.devDependencies', projectJson.devDependencies);
+		if ('typescript' in projectJson.devDependencies) {
+			inferredProjectType = 'ts';
+		}
+	}
+	// console.log('inferredProjectType:', inferredProjectType);
+	projectType = inferredProjectType;
+} else if (projectType !== 'js' || projectType !== 'ts') {
+	console.log('invalid projectType');
+	return;
+}
+// console.log('projectType:', projectType);
+
+//
+// build ts to js if necessary
+if (projectType == 'ts') {
+	if (settings.tsBuild) {
+		console.log('build ts -> js');
+
+		const buildCommand = `npm run ${settings.tsBuildScriptName}`;
+		exec(buildCommand, (error, stdout, stderr) => {
+			if (error) {
+				console.log(`error: ${error.message}`);
+				return;
+			}
+			if (stderr) {
+				console.log(`stderr: ${stderr}`);
+				return;
+			}
+			// console.log(`stdout: ${stdout}`);
+		}).stdout.pipe(process.stdout); // prints logs of exec call
 	}
 }
 
 //
-// is it a TS or JS project?
-let projectType = 'js'; // or 'ts'
-let buildScriptName = 'build'; // configurable in settings.json but usually its "build"
-if ('devDependencies' in projectJson) {
-	// console.log('projectJson.devDependencies', projectJson.devDependencies);
-	if ('typescript' in projectJson.devDependencies) {
-		projectType = 'ts';
+// get index js path
+let indexJsPath = settings.indexPath; // 'auto' | some path relative to project root
+if (indexJsPath == 'auto') {
+	// tries to find path to js file auto-magically via project's package.json > main field value
+
+	if ('main' in projectJson) {
+		let projectMainJsPath = projectJson.main;
+		// console.log('projectMainJsPath', projectMainJsPath);
+		if (projectMainJsPath.substring(0, 2) == '..') {
+			throw 'what are you doing building to outside your root directory?';
+		} else if (projectMainJsPath.substring(0, 1) == '.') {
+			// handle "./file.js" OR "file.js"
+			// lop off relative "." for path resolve use
+			projectMainJsPath = projectMainJsPath.substring(1);
+		}
+
+		if (projectMainJsPath.substring(0, 1) == '/') {
+			projectMainJsPath = projectMainJsPath.substring(1);
+		}
+		// now projectMainJsPath must look something like: "file.js" | "folder/folder/file.js"
+
+		// auto got:
+		// console.log('projectMainJsPath', projectMainJsPath);
+		indexJsPath = projectMainJsPath;
+	} else {
+		throw 'couldnt find indexPath automatically...';
 	}
 }
-console.log('projectType:', projectType);
-// + TODO
-// const projectTypeOverride = option.projectTypeOverride; // 'js' | 'ts' from cli args OR settings.json
-// projectType = projectTypeOverride;
-
-// cache setup
-const cachePath = path.resolve(packageRootPath, 'cache');
-const cacheJsonPath = path.resolve(cachePath, 'cache.json');
 
 //
 // read built/final functions index.js
-let SrcIndex = null;
+let indexJs = null;
 try {
-	const pathIndex = path.resolve(projectRootPath, projectMainJsPath);
-	// console.log('pathIndex', pathIndex);
-	SrcIndex = require(pathIndex);
+	indexJsPath = path.resolve(projectRootPath, indexJsPath);
+	// console.log('indexJsPath:', indexJsPath);
+	indexJs = require(indexJsPath);
 } catch (e) {
-	console.log('no index.js file');
-	return;
+	throw 'couldnt find indexJs (file w cloud functions in js)'
 }
 
-//
-// --- handle options ---
-
-/**
- * 1. use default settings.json (as base)
- * 2. use settings.json config (project set)
- * 3. (optional) override w cli args (runtime set)
- * 4. go parse project + populate command
- */
 
 if (options.debug) {
-	console.log('~~ hello (de)bugger ~~');
+	console.log('~~~ hello (de)bugger ~~~');
 	console.log('settingsDefaultJson:', settingsDefaultJson);
-	// TODO user/repo settings
-	console.log('inline cli args:', options)
-	// using these settings: ...
+	console.log('settingsUser:', settingsUser);
+	console.log('settingsInline:', options);
+	console.log('FINAL settings:', settings);
+	console.log('projectType:', projectType);
+	console.log('indexJsPath:', indexJsPath);
+	console.log('~~~       bye        ~~~');
 };
 
-if (options.indexPath) {
-	// TODO override default path + settings.json configured path w inline cli arg
-	console.log('override path w cli arg');
-	// set path...
-}
-
 //
-const exportedFuncs = Object.keys(SrcIndex);
-// console.log('exportedFuncs:', exportedFuncs);
-const choices = exportedFuncs.map(x => {
+// read exported function names from cf index file
+const indexExportedFuncs = Object.keys(indexJs);
+// console.log('indexExportedFuncs:', indexExportedFuncs);
+const checkboxChoices = indexExportedFuncs.map(x => {
 	return { name: x }
 });
-// console.log('choices', choices);
+// console.log('checkboxChoices', checkboxChoices);
 
 //
-// try read from cache to find previously ranWith func deploys
+// try to read from cache to find previously ranWith func deploys
+// const cacheJsonPath = path.resolve(packageRootPath, 'funcy-cache.json');
+const cacheJsonPath = path.resolve(packageRootPath, settings.funcyCacheFile);
 try {
 	// const cacheJsonStr = fs.readFileSync(cacheJsonPath, 'utf8'); // needs JSON.parse(cacheJsonStr)
 	const cacheJson = require(cacheJsonPath); // "require" parses JSON automatically
 	// console.log('cacheJson', cacheJson);
 
-	for (let [i, c] of choices.entries()) {
-		// c.name == exported function name
+	for (let [i, c] of checkboxChoices.entries()) {
+		// c.name IS the exported function name
 		for (let cPrev of cacheJson.ranWith) {
 			if (c.name == cPrev) {
 				// replace choice w choice selected!
-				choices.splice(i, 1, {
+				checkboxChoices.splice(i, 1, {
 					name: c.name,
 					checked: true
 				});
@@ -174,8 +221,7 @@ try {
 	}
 } catch (e) {
 	// console.log('no previous cache');
-	// if this fails, we dont care - start as new (never been called w selections before)
-	// console.log('no previous call cache');
+	// if this fails, we dont care, start as new (never been called w selections before)
 }
 
 //
@@ -186,7 +232,7 @@ inquirer
 			type: 'checkbox',
 			name: 'selectedFunctions',
 			message: 'Select functions to deploy:',
-			choices: choices,
+			choices: checkboxChoices,
 			validate(answer) {
 				if (answer.length < 1) {
 					// return 'Choose at least one.';
@@ -234,14 +280,8 @@ inquirer
 					console.log(`stderr: ${stderr}`);
 					return;
 				}
-				console.log(`stdout: ${stdout}`);
+				// console.log(`stdout: ${stdout}`);
 			}).stdout.pipe(process.stdout); // prints logs of exec call
-
-			// creates "cache" dir (if OR if it doesnt exist)
-			// FYI cache is kept local to package, ex: node_modules/funcy-picker/cache/...
-			fs.mkdir(cachePath, { recursive: true }, (err) => {
-				if (err) throw err;
-			});
 
 			// write cache
 			fs.writeFile(

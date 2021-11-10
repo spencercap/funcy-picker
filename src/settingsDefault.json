@@ -1,7 +1,9 @@
 {
-	"debug": false,
-	"path": "dist/index.js",
-	"isTypescript": false,
-	"typeOverride": "js",
-	"userSettings": "settings.json"
+	"indexPath": "dist/index.js",
+	"projectType": "auto",
+
+	"tsBuild": true,
+	"tsBuildScriptName": "build",
+
+	"funcyCacheFile": "funcy-cache.json"
 }

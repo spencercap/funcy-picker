@@ -6,10 +6,10 @@
 	"license": "MIT",
 	"main": "./src/cli.js",
 	"scripts": {
-		"test": "./src/cli.js arg1",
+		"test": "./src/cli.js --help",
 		"link": "npm link",
 		"unlink": "npm unlink",
-		"run": "funcy-picker arg1"
+		"run": "funcy-picker"
 	},
 	"bin": {
 		"funcy-picker": "./src/cli.js"
