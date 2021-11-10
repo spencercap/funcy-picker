@@ -1,3 +1,7 @@
 {
-	"hello": "world"
+	"debug": false,
+	"path": "dist/index.js",
+	"isTypescript": false,
+	"typeOverride": "js",
+	"one": 1
 }

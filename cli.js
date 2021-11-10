@@ -34,6 +34,11 @@ const packageVersion = packageJson.version;
 program.version(packageVersion); // FYI set version BEFORE options/args
 
 //
+// default settings
+const settingsDefaultJson = require(path.resolve(packageRootPath, 'settings.json'));
+// console.log('settingsDefaultJson', settingsDefaultJson);
+
+//
 // define cli options/args
 program
 	.option('-d, --debug', 'debug mode on')
@@ -96,15 +101,18 @@ try {
 // --- handle options ---
 
 /**
- * 1. use settings.json config
- * 2. use default settings.json
- * 3. (optional) override w cli args
+ * 1. use default settings.json (as base)
+ * 2. use settings.json config (project set)
+ * 3. (optional) override w cli args (runtime set)
  * 4. go parse project + populate command
  */
 
 if (options.debug) {
-	console.log('hello (de)bugger');
-	console.log(options)
+	console.log('~~ hello (de)bugger ~~');
+	console.log('settingsDefaultJson:', settingsDefaultJson);
+	// TODO user/repo settings
+	console.log('inline cli args:', options)
+	// using these settings: ...
 };
 
 if (options.path) {
@@ -124,28 +132,24 @@ const choices = exportedFuncs.map(x => {
 //
 // try read from cache to find previously ranWith func deploys
 try {
-	const cacheJsonStr = fs.readFileSync(cacheJsonPath, 'utf8');
-	// console.log('cacheJsonStr', cacheJsonStr);
+	// const cacheJsonStr = fs.readFileSync(cacheJsonPath, 'utf8'); // needs JSON.parse(cacheJsonStr)
+	const cacheJson = require(cacheJsonPath); // "require" parses JSON automatically
+	// console.log('cacheJson', cacheJson);
 
-	let cacheJson = null;
-	if (cacheJsonStr) {
-		cacheJson = JSON.parse(cacheJsonStr);
-		// console.log('cacheJson:', cacheJson);
-
-		for (let [i, c] of choices.entries()) {
-			// c.name == exported function name
-			for (let cPrev of cacheJson.ranWith) {
-				if (c.name == cPrev) {
-					// replace choice w choice selected!
-					choices.splice(i, 1, {
-						name: c.name,
-						checked: true
-					});
-				}
+	for (let [i, c] of choices.entries()) {
+		// c.name == exported function name
+		for (let cPrev of cacheJson.ranWith) {
+			if (c.name == cPrev) {
+				// replace choice w choice selected!
+				choices.splice(i, 1, {
+					name: c.name,
+					checked: true
+				});
 			}
 		}
 	}
 } catch (e) {
+	// console.log('no previous cache');
 	// if this fails, we dont care - start as new (never been called w selections before)
 	// console.log('no previous call cache');
 }
