@@ -36,7 +36,7 @@ program.version(packageVersion); // set version BEFORE options
 // read built functions ouput
 const projectJson = require(path.resolve(projectRootPath, 'package.json'));
 // const projectVersion = packageJson.version;
-const projectMainJs = packageJson.main;
+const projectMainJs = projectJson.main;
 console.log('projectMainJs', projectMainJs);
 if (projectMainJs) {
 	if (projectMainJs.substring(0, 2) == '..') {
