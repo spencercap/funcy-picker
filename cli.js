@@ -6,6 +6,10 @@ const fs = require('fs');
 const path = require('path');
 // const { parse } = require("path");
 
+exports.bewm = () => {
+	console.log('bewm func log');
+}
+
 // start
 console.log('👋');
 
@@ -14,7 +18,48 @@ const [env, name, ...args] = process.argv;
 console.log('args:', args);
 
 const { program } = require('commander');
-program.version('0.0.1');
+// import { program } from 'commander'; // only in .ts
+
+const packageRootPath = path.resolve(__dirname); // stores cache (aka ranWith)
+const projectRootPath = path.resolve('./'); // store default override settings
+
+// read package
+// const pjson = require('./package.json');
+const packageJson = require(path.resolve(packageRootPath, './package.json'));
+const packageVersion = packageJson.version;
+console.log('packageVersion', packageVersion);
+// program.version('0.0.1'); // hard coded
+program.version(packageVersion); // set version BEFORE options
+//
+
+//
+// read built functions ouput
+const projectJson = require(path.resolve(projectRootPath, './package.json'));
+// const projectVersion = packageJson.version;
+const projectMainJs = packageJson.main;
+console.log('projectMainJs', projectMainJs);
+if (projectMainJs) {
+	if (projectMainJs.substring(0, 2) == '..') {
+		console.log('what are you doing building to outside your root directory?');
+		return;
+	} else if (projectMainJs.substring(0, 1) == '..') {
+		// lop off relative "." for path resolve use
+		projectMainJs = projectMainJs.substring(1);
+	}
+	// projectMainJs;
+}
+
+let SrcIndex = null;
+try {
+	// SrcIndex = require(options.path); // works
+	const pathIndex = path.resolve(projectRootPath, projectMainJs);
+	console.log('pathIndex', pathIndex);
+	SrcIndex = require(pathIndex);
+} catch (e) {
+	console.log('no index source file');
+	return;
+}
+//
 
 // TEST - args
 // set
@@ -52,23 +97,21 @@ console.log('path1', path1);
 const pathRoot = path.resolve('./');
 console.log('pathRoot:', pathRoot);
 
-const packageRootPath = path.resolve(__dirname); // stores cache (aka ranWith)
-const projectRootPath = path.resolve('./'); // store default override settings
-
 // const SrcIndex = require("./examples/cf-index-built.js");
 // const SrcIndex = require("./examples/funcs-index.js");
 
-let SrcIndex = null;
-try {
-	SrcIndex = require(options.path);
-} catch (e) {
-	console.log('no index source file');
-	return;
-}
+// works (but is hardcoded to input options -p)
+// let SrcIndex = null;
+// try {
+// 	SrcIndex = require(options.path);
+// } catch (e) {
+// 	console.log('no index source file');
+// 	return;
+// }
 
 // const SrcIndex = require(options.path);
 const exportedFuncs = Object.keys(SrcIndex);
-// console.log('exportedFuncs:', exportedFuncs);
+console.log('exportedFuncs:', exportedFuncs);
 
 const choices = exportedFuncs.map(x => {
 	return { name: x }
@@ -294,4 +337,3 @@ inquirer
 // };
 // answer();
 // >>>>>>> steno-comment
-

@@ -1,32 +1,32 @@
 {
-  "name": "funcy-picker",
-  "version": "1.0.4",
-  "description": "pick which firebase cloud functions to deploy with a command line app",
-  "author": "@spencercap",
-  "license": "MIT",
-  "main": "./cli.js",
-  "scripts": {
-    "test": "./cli.js argo",
-    "link": "npm link",
-    "unlink": "npm unlink",
-    "run": "funcy-picker argo"
-  },
-  "bin": {
-    "funcy-picker": "./cli.js"
-  },
-  "files": [
-    "cli.js"
-  ],
-  "dependencies": {
-    "commander": "^8.3.0",
-    "inquirer": "^8.2.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/spencercap/funcy-picker.git"
-  },
-  "bugs": {
-    "url": "https://github.com/spencercap/funcy-picker/issues"
-  },
-  "homepage": "https://github.com/spencercap/funcy-picker#readme"
+	"name": "funcy-picker",
+	"version": "1.0.5",
+	"description": "pick which firebase cloud functions to deploy with a command line app",
+	"author": "@spencercap",
+	"license": "MIT",
+	"main": "./cli.js",
+	"scripts": {
+		"test": "./cli.js argo",
+		"link": "npm link",
+		"unlink": "npm unlink",
+		"run": "funcy-picker argo"
+	},
+	"bin": {
+		"funcy-picker": "./cli.js"
+	},
+	"files": [
+		"cli.js"
+	],
+	"dependencies": {
+		"commander": "^8.3.0",
+		"inquirer": "^8.2.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/spencercap/funcy-picker.git"
+	},
+	"bugs": {
+		"url": "https://github.com/spencercap/funcy-picker/issues"
+	},
+	"homepage": "https://github.com/spencercap/funcy-picker#readme"
 }
