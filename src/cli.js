@@ -23,7 +23,7 @@ exports.bewm2 = () => {
 
 //
 // root paths
-const packageRootPath = path.resolve(__dirname); // stores cache (aka ranWith)
+const packageRootPath = path.resolve(__dirname, '../'); // stores cache (aka ranWith)
 const projectRootPath = path.resolve('./'); // stores default override settings
 
 //
@@ -35,7 +35,7 @@ program.version(packageVersion); // FYI set version BEFORE options/args
 
 //
 // default settings
-const settingsDefaultJson = require(path.resolve(packageRootPath, 'settings.json'));
+const settingsDefaultJson = require(path.resolve(packageRootPath, 'src/settings.json'));
 // console.log('settingsDefaultJson', settingsDefaultJson);
 
 //

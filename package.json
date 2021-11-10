@@ -1,21 +1,21 @@
 {
 	"name": "funcy-picker",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "pick which firebase cloud functions to deploy with a command line app",
 	"author": "@spencercap",
 	"license": "MIT",
-	"main": "./cli.js",
+	"main": "./src/cli.js",
 	"scripts": {
-		"test": "./cli.js argo",
+		"test": "./src/cli.js arg1",
 		"link": "npm link",
 		"unlink": "npm unlink",
-		"run": "funcy-picker argo"
+		"run": "funcy-picker arg1"
 	},
 	"bin": {
-		"funcy-picker": "./cli.js"
+		"funcy-picker": "./src/cli.js"
 	},
 	"files": [
-		"cli.js"
+		"src/*"
 	],
 	"dependencies": {
 		"commander": "^8.3.0",
