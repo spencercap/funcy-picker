@@ -1,42 +1,67 @@
 #!/usr/bin/env node
 
-const inquirer = require('inquirer');
+// imports
 const { exec } = require("child_process");
-const fs = require('fs');
 const path = require('path');
-// const { parse } = require("path");
+const fs = require('fs');
 
-exports.bewm = () => {
-	console.log('bewm func log');
+// cli help:
+const inquirer = require('inquirer');
+const { program } = require('commander');
+// import { program } from 'commander'; // the .ts way
+
+// example export funcs for dev
+exports.bewm1 = () => {
+	console.log('bewm1 log');
+}
+exports.bewm2 = () => {
+	console.log('bewm2 log');
 }
 
-// start
-console.log('👋');
+// welcome
+// console.log('👋');
 
-// args
-const [env, name, ...args] = process.argv;
-console.log('args:', args);
-
-const { program } = require('commander');
-// import { program } from 'commander'; // only in .ts
-
+//
+// root paths
 const packageRootPath = path.resolve(__dirname); // stores cache (aka ranWith)
-const projectRootPath = path.resolve('./'); // store default override settings
+const projectRootPath = path.resolve('./'); // stores default override settings
 
-// read package
-// const pjson = require('./package.json');
+//
+// read PACKAGE package.json (this package, funcy-picker)
 const packageJson = require(path.resolve(packageRootPath, 'package.json'));
 const packageVersion = packageJson.version;
-console.log('packageVersion', packageVersion);
-// program.version('0.0.1'); // hard coded
-program.version(packageVersion); // set version BEFORE options
-//
+// console.log('packageVersion', packageVersion);
+program.version(packageVersion); // FYI set version BEFORE options/args
 
 //
-// read built functions ouput
+// define cli options/args
+program
+	.option('-d, --debug', 'debug mode on')
+	.option('-p, --path <path>', 'functions\' index.js path')
+	// TODO add
+	// 		- cache dir ("cache/")
+	// 		-
+	.option('-b, --build-prj <buildPrj>', 'build project before parse (yes)'); // defaults to YES build the project's function IF its written in TS, otherwise just read the .js
+// parse args
+program.parse(process.argv);
+const options = program.opts();
+
+//
+// read PROJECT package.json (for main ouput index.js path)
 const projectJson = require(path.resolve(projectRootPath, 'package.json'));
-// const projectVersion = packageJson.version;
+const projectMainJsPath = projectJson.main;
+// console.log('projectMainJsPath', projectMainJsPath);
+if (projectMainJsPath) {
+	if (projectMainJsPath.substring(0, 2) == '..') {
+		console.log('what are you doing building to outside your root directory?');
+		return;
+	} else if (projectMainJsPath.substring(0, 1) == '..') {
+		// lop off relative "." for path resolve use
+		projectMainJsPath = projectMainJsPath.substring(1);
+	}
+}
 
+//
 // is it a TS or JS project?
 let projectType = 'js'; // or 'ts'
 let buildScriptName = 'build'; // configurable in settings.json but usually its "build"
@@ -47,111 +72,69 @@ if ('devDependencies' in projectJson) {
 	}
 }
 console.log('projectType:', projectType);
-// TODO
+// + TODO
 // const projectTypeOverride = option.projectTypeOverride; // 'js' | 'ts' from cli args OR settings.json
 // projectType = projectTypeOverride;
 
-// get prj main js
-const projectMainJs = projectJson.main;
-console.log('projectMainJs', projectMainJs);
-if (projectMainJs) {
-	if (projectMainJs.substring(0, 2) == '..') {
-		console.log('what are you doing building to outside your root directory?');
-		return;
-	} else if (projectMainJs.substring(0, 1) == '..') {
-		// lop off relative "." for path resolve use
-		projectMainJs = projectMainJs.substring(1);
-	}
-	// projectMainJs;
-}
+// cache setup
+const cachePath = path.resolve(packageRootPath, 'cache');
+const cacheJsonPath = path.resolve(cachePath, 'cache.json');
 
+//
+// read built/final functions index.js
 let SrcIndex = null;
 try {
-	// SrcIndex = require(options.path); // works
-	const pathIndex = path.resolve(projectRootPath, projectMainJs);
-	console.log('pathIndex', pathIndex);
+	const pathIndex = path.resolve(projectRootPath, projectMainJsPath);
+	// console.log('pathIndex', pathIndex);
 	SrcIndex = require(pathIndex);
 } catch (e) {
-	console.log('no index source file');
-	return;
-}
-//
-
-// TEST - args
-// set
-program
-	.option('-d, --debug', 'output extra debugging')
-	.option('-s, --small', 'small pizza size')
-	.option('-pi, --pizza-type <type>', 'flavour of pizza')
-	.option('-p, --path <path>', 'path')
-	.option('-b, --build-prj <buildPrj>', 'build project?'); // defaults to YES build the project's function IF its written in TS, otherwise just read the .js
-
-// parse
-program.parse(process.argv);
-// see
-const options = program.opts();
-if (options.debug) console.log(options);
-console.log('pizza details:');
-if (options.small) console.log('- small pizza size');
-if (options.pizzaType) console.log(`- ${options.pizzaType}`);
-if (options.path) console.log(`- ${options.path}`);
-//
-//
-//
-
-if (!options.path) {
-	console.log('no path!');
+	console.log('no index.js file');
 	return;
 }
 
+//
+// --- handle options ---
 
-const path1 = path.resolve(__dirname);
-console.log('path1', path1);
+/**
+ * 1. use settings.json config
+ * 2. use default settings.json
+ * 3. (optional) override w cli args
+ * 4. go parse project + populate command
+ */
 
-// another way:
-// const dirName = path.dirname(require.main.filename);
-// console.log('dirName', dirName);
+if (options.debug) {
+	console.log('hello (de)bugger');
+	console.log(options)
+};
 
-const pathRoot = path.resolve('./');
-console.log('pathRoot:', pathRoot);
+if (options.path) {
+	// TODO override default path + settings.json configured path w inline cli arg
+	console.log('override path w cli arg');
+	// set path...
+}
 
-// const SrcIndex = require("./examples/cf-index-built.js");
-// const SrcIndex = require("./examples/funcs-index.js");
-
-// works (but is hardcoded to input options -p)
-// let SrcIndex = null;
-// try {
-// 	SrcIndex = require(options.path);
-// } catch (e) {
-// 	console.log('no index source file');
-// 	return;
-// }
-
-// const SrcIndex = require(options.path);
+//
 const exportedFuncs = Object.keys(SrcIndex);
-console.log('exportedFuncs:', exportedFuncs);
-
+// console.log('exportedFuncs:', exportedFuncs);
 const choices = exportedFuncs.map(x => {
 	return { name: x }
 });
 // console.log('choices', choices);
 
-// test read from cache
+//
+// try read from cache to find previously ranWith func deploys
 try {
-	// let rawdata = fs.readFileSync('./cache/last-run-with.json');
-	// let rawdata = fs.readFileSync(path.resolve(__dirname, '/cache/last-run-with.json'), 'utf8');
-	let rawdata = fs.readFileSync(path.resolve(__dirname, 'cache/last-run-with.json'));
-	// path.resolve(__dirname, '/cache/last-run-with.json')
-	// console.log('rawdata', rawdata);
+	const cacheJsonStr = fs.readFileSync(cacheJsonPath, 'utf8');
+	// console.log('cacheJsonStr', cacheJsonStr);
 
-	let parsed = null;
-	if (rawdata) {
-		parsed = JSON.parse(rawdata);
-		console.log('parsed:', parsed);
+	let cacheJson = null;
+	if (cacheJsonStr) {
+		cacheJson = JSON.parse(cacheJsonStr);
+		// console.log('cacheJson:', cacheJson);
 
 		for (let [i, c] of choices.entries()) {
-			// c.name
-			for (let cPrev of parsed.ranWith) {
+			// c.name == exported function name
+			for (let cPrev of cacheJson.ranWith) {
 				if (c.name == cPrev) {
 					// replace choice w choice selected!
 					choices.splice(i, 1, {
@@ -163,44 +146,23 @@ try {
 		}
 	}
 } catch (e) {
-	// return;
-	console.log('no previous call cache');
+	// if this fails, we dont care - start as new (never been called w selections before)
+	// console.log('no previous call cache');
 }
 
-
-// fs.readFile('./cache/last-run-with.json', (err, data) => {
-// 	// if (err) throw err;
-// 	if (err) return;
-
-// 	parsed = JSON.parse(data);
-// 	console.log('parsed:', parsed);
-
-// 	for (let [i, c] of choices.entries()) {
-// 		// c.name
-// 		for (let cPrev of parsed.ranWith) {
-// 			if (c.name == cPrev) {
-// 				// replace choice w choice selected!
-// 				choices.splice(i, 1, {
-// 					name: c.name,
-// 					checked: true
-// 				});
-// 			}
-// 		}
-// 	}
-// });
-
-// console.log('choices:', choices);
-
+//
+// display checkbox UI picker
 inquirer
 	.prompt([
 		{
 			type: 'checkbox',
-			message: 'Select functions to deploy',
 			name: 'selectedFunctions',
+			message: 'Select functions to deploy:',
 			choices: choices,
 			validate(answer) {
 				if (answer.length < 1) {
-					return 'Choose at least one.';
+					// return 'Choose at least one.';
+					return true; // sure, cancel it all - no validation...
 				}
 				return true;
 			},
@@ -214,25 +176,27 @@ inquirer
 	- generated by stenography autopilot [ 🚗👩‍✈️ ]
 	*/
 	.then((answers) => {
-		// console.log(JSON.stringify(answers, null, '  '));
+		// console.log(JSON.stringify(answers, null, '  ')); // test
 
 		if (answers['selectedFunctions']) {
 			const funcs = answers['selectedFunctions'];
-			console.log('funcs:', funcs);
+			// console.log('funcs:', funcs);
+
+			if (!funcs || !funcs.length) {
+				// dont do anything...
+				return;
+			}
 
 			const funcsAsCommaList = funcs.join(',');
-			console.log('funcsAsCommaList:', funcsAsCommaList);
+			// console.log('funcsAsCommaList:', funcsAsCommaList);
 
-			// firebase cf format:
+			// example firebase cf format:
 			// $ firebase deploy --only functions:addMessage,functions:makeUppercase
 			const command = `firebase deploy --only functions:${funcsAsCommaList}`;
-			console.log('command:', command);
 
-			// samples
-			// exec("ls -la", (error, stdout, stderr) => {
-			// exec("ls", (error, stdout, stderr) => {
+			console.log('deploying:', funcsAsCommaList);
+			console.log(command);
 
-			// real:
 			exec(command, (error, stdout, stderr) => {
 				if (error) {
 					console.log(`error: ${error.message}`);
@@ -243,117 +207,26 @@ inquirer
 					return;
 				}
 				console.log(`stdout: ${stdout}`);
-			}).stdout.pipe(process.stdout);
-			// pipe logs to project's logs
-			// exec('coffee -cw my_file.coffee').stdout.pipe(process.stdout);
+			}).stdout.pipe(process.stdout); // prints logs of exec call
 
-
-			// for (const func of answer['selectedFunctions']) {
-			// 	console.log('f', func);
-			// }
-
-			// TODO write to local cache which options we used last time and pre-select those for next time
-
-			// Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.
-			// fs.mkdir('./cache', { recursive: true }, (err) => {
-			fs.mkdir(path.resolve(__dirname, 'cache'), { recursive: true }, (err) => {
+			// creates "cache" dir (if OR if it doesnt exist)
+			// FYI cache is kept local to package, ex: node_modules/funcy-picker/cache/...
+			fs.mkdir(cachePath, { recursive: true }, (err) => {
 				if (err) throw err;
 			});
 
-			// fs.writeFile(
-			// 	'./cache/last-run-with.js',
-			// 	`// funcsAsCommaList: ${funcsAsCommaList}`,
-			// 	function (err) {
-			// 		if (err) return console.log(err);
-			// 		console.log('wrote file');
-			// 	}
-			// );
-
+			// write cache
 			fs.writeFile(
-				// './cache/last-run-with.json',
-				path.resolve(__dirname, 'cache/last-run-with.json'),
+				cacheJsonPath,
 				JSON.stringify({
 					ranWith: funcs
 				}),
 				function (err) {
 					if (err) return console.log(err);
-					console.log('wrote file');
+					// console.log('saved cache file');
 				}
 			);
 		}
+
+		return;
 	});
-
-// inquirer example:
-// 	.prompt([
-// 		{
-// 			type: 'checkbox',
-// 			message: 'Select toppings',
-// 			name: 'toppings',
-// 			choices: [
-// 				new inquirer.Separator(' = The Meats = '),
-// 				{
-// 					name: 'Pepperoni',
-// 				},
-// 				{
-// 					name: 'Ham',
-// 				},
-// 				{
-// 					name: 'Ground Meat',
-// 				},
-// 				{
-// 					name: 'Bacon',
-// 				},
-// 				new inquirer.Separator(' = The Cheeses = '),
-// 				{
-// 					name: 'Mozzarella',
-// 					checked: true,
-// 				},
-// 				{
-// 					name: 'Cheddar',
-// 				},
-// 				{
-// 					name: 'Parmesan',
-// 				},
-// 				new inquirer.Separator(' = The extras = '),
-// 				{
-// 					name: 'Pineapple',
-// 				},
-// 				{
-// 					name: 'Olives',
-// 					disabled: 'out of stock',
-// 				},
-// 				{
-// 					name: 'Extra cheese',
-// 				},
-// 			],
-// 			validate(answer) {
-// 				if (answer.length < 1) {
-// 					return 'You must choose at least one topping.';
-// 				}
-
-// 				return true;
-// 			},
-// 		},
-// 	])
-// 	.then((answers) => {
-// 		console.log(JSON.stringify(answers, null, '  '));
-// 	});
-
-// test for steno
-// <<<<<<< HEAD
-// const answer = () => {
-// 	const x = 'the meaning of life';
-// 	console.log(x);
-// };
-// answer();
-// =======
-// /*
-// This code block defines a simple function and logs a variable to the console. (spencer wrote this)
-// - generated by stenography autopilot [ 🚗👩‍✈️ ]
-// */
-// const answer = () => {
-// 	const x = 'the meaning of life';
-// 	console.log(x);
-// };
-// answer();
-// >>>>>>> steno-comment
