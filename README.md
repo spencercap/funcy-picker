@@ -10,6 +10,8 @@ a CLI app that lets you choose which firebase cloud functions to deploy.
 
 TODO
 
+TODO - make cli inline args work (currently online settings.json work)
+
 -   default settings are:
     ...
 -   these settings can be overwritten via your own `funcy-settings.json` at the root of your directory (peer to `package.json`) OR via command line arguments (which take precedence)
