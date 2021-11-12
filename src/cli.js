@@ -3,7 +3,6 @@
 // imports
 const path = require('path');
 const fs = require('fs');
-const util = require('util');
 const { exec } = require("child_process");
 function execPromise(command) {
 	return new Promise(function (resolve, reject) {
@@ -25,6 +24,8 @@ const inquirer = require('inquirer');
 const { program } = require('commander');
 // import { program } from 'commander'; // the .ts way
 
+var lastTsBuildTime = 0; // date time as number (for saving in cache.json)
+
 // example export funcs for dev
 exports.bewm1 = () => {
 	console.log('bewm1 log');
@@ -36,7 +37,7 @@ exports.bewm2 = () => {
 const main = async () => {
 	//
 	// root paths
-	const packageRootPath = path.resolve(__dirname, '../'); // stores cache (aka ranWith)
+	const packageRootPath = path.resolve(__dirname, '../'); // stores cache (aka ranFuncs)
 	const projectRootPath = path.resolve('./'); // stores default override settings
 
 	//
@@ -111,6 +112,7 @@ const main = async () => {
 
 	//
 	let projectType = settings.projectType; // auto | js | ts
+	// console.log('projectType', projectType);
 	if (projectType == 'auto') {
 		// automatically find if project is TS or JS
 		let inferredProjectType = 'js';
@@ -122,31 +124,11 @@ const main = async () => {
 		}
 		// console.log('inferredProjectType:', inferredProjectType);
 		projectType = inferredProjectType;
-	} else if (projectType !== 'js' || projectType !== 'ts') {
+	} else if (projectType !== 'js' && projectType !== 'ts') {
 		console.log('invalid projectType');
 		return;
 	}
 	// console.log('projectType:', projectType);
-
-	//
-	// build ts to js if necessary
-	if (projectType == 'ts') {
-		if (settings.tsBuild) {
-			console.log('build ts -> js');
-
-			const buildCommand = `npm run ${settings.tsBuildScriptName}`;
-
-			try {
-				const stdout = await execPromise(buildCommand);
-			} catch (e) {
-				console.log('error building ts project');
-				if (options.debug) {
-					console.log('err:', e);
-				}
-				return;
-			}
-		}
-	}
 
 	//
 	// get index js path
@@ -181,6 +163,67 @@ const main = async () => {
 	}
 
 	//
+	// build ts to js if necessary
+	if (projectType == 'ts') {
+		if (settings.tsBuild) {
+			console.log('build ts -> js');
+
+			//
+			// do we have to run build? (tsc) has anything changed?
+			let buildNeeded = true;
+			const cacheJsonPath = path.resolve(packageRootPath, settings.funcyCacheFile);
+			try {
+				const cacheJson = require(cacheJsonPath); // "require" parses JSON automatically
+				// console.log('cacheJson', cacheJson);
+
+				if ('tsIndexLastBuilt' in cacheJson) {
+					try {
+						indexJsPath = path.resolve(projectRootPath, indexJsPath);
+						// console.log('indexJsPath:', indexJsPath);
+						const indexJsStats = fs.statSync(indexJsPath);
+
+						const indexJsLastModified = indexJsStats.mtime; // date
+						if (cacheJson['tsIndexLastBuilt'] <= indexJsLastModified.getTime()) {
+							lastTsBuildTime = cacheJson['tsIndexLastBuilt'];
+							buildNeeded = false;
+						}
+					} catch (e) {
+						console.log('couldnt get index.ts stats');
+						throw 'no index stats';
+					}
+				} else {
+					// give up
+				}
+			} catch (e) {
+				// no cache, thats ok, just build ts -> js
+			}
+
+			if (buildNeeded) {
+				const buildCommand = `npm run ${settings.tsBuildScriptName}`;
+
+				try {
+					const stdout = await execPromise(buildCommand);
+
+					try {
+						indexJsPath = path.resolve(projectRootPath, indexJsPath);
+						const indexJsStats = fs.statSync(indexJsPath);
+						lastTsBuildTime = indexJsStats.mtime.getTime(); // date
+					} catch (e) {
+						console.log('error writing lastTsBuildTime date time');
+					}
+
+				} catch (e) {
+					console.log('error building ts project');
+					if (options.debug) {
+						console.log('err:', e);
+					}
+					return;
+				}
+			}
+		}
+	}
+
+	//
 	// read built/final functions index.js
 	let indexJs = null;
 	try {
@@ -194,14 +237,14 @@ const main = async () => {
 
 
 	if (options.debug) {
-		console.log('~~~ hello (de)bugger ~~~');
+		console.log('🐞🐞hello (de)bugger🐞🐞🐞')
 		console.log('settingsDefaultJson:', settingsDefaultJson);
 		console.log('settingsUser:', settingsUser);
 		console.log('settingsInline:', options);
 		console.log('FINAL settings:', settings);
 		console.log('projectType:', projectType);
 		console.log('indexJsPath:', indexJsPath);
-		console.log('~~~       bye        ~~~');
+		console.log('🐞🐞🐞🐞🐞🐞bye🐞🐞🐞🐞🐞🐞🐞');
 	};
 
 	//
@@ -214,7 +257,7 @@ const main = async () => {
 	// console.log('checkboxChoices', checkboxChoices);
 
 	//
-	// try to read from cache to find previously ranWith func deploys
+	// try to read from cache to find previously ranFuncs func deploys
 	// const cacheJsonPath = path.resolve(packageRootPath, 'funcy-cache.json');
 	const cacheJsonPath = path.resolve(packageRootPath, settings.funcyCacheFile);
 	try {
@@ -224,7 +267,7 @@ const main = async () => {
 
 		for (let [i, c] of checkboxChoices.entries()) {
 			// c.name IS the exported function name
-			for (let cPrev of cacheJson.ranWith) {
+			for (let cPrev of cacheJson.ranFuncs) {
 				if (c.name == cPrev) {
 					// replace choice w choice selected!
 					checkboxChoices.splice(i, 1, {
@@ -293,15 +336,18 @@ const main = async () => {
 					if (options.debug) {
 						console.log('err:', e);
 					}
-					return;
+					// continue w cache save if this fails?
+					// return;
 				}
 
 				// write cache
 				fs.writeFile(
 					cacheJsonPath,
 					JSON.stringify({
-						ranWith: funcs
-					}),
+						ranFuncs: funcs,
+						allFuncs: indexExportedFuncs,
+						lastTsBuildTime: lastTsBuildTime
+					}, null, '\t'),
 					function (err) {
 						if (err) return console.log(err);
 						// console.log('saved cache file');
