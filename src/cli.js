@@ -24,7 +24,7 @@ const inquirer = require('inquirer');
 const { program } = require('commander');
 // import { program } from 'commander'; // the .ts way
 
-var lastTsBuildTime = 0; // date time as number (for saving in cache.json)
+// let lastTsBuildTime = 0; // date time as number (for saving in cache.json)
 
 // example export funcs for dev
 exports.bewm1 = () => {
@@ -171,32 +171,33 @@ const main = async () => {
 			//
 			// do we have to run build? (tsc) has anything changed?
 			let buildNeeded = true;
-			const cacheJsonPath = path.resolve(packageRootPath, settings.funcyCacheFile);
-			try {
-				const cacheJson = require(cacheJsonPath); // "require" parses JSON automatically
-				// console.log('cacheJson', cacheJson);
+			// const cacheJsonPath = path.resolve(packageRootPath, settings.funcyCacheFile);
+			// try {
+			// 	const cacheJson = require(cacheJsonPath); // "require" parses JSON automatically
+			// 	// console.log('cacheJson', cacheJson);
 
-				if ('tsIndexLastBuilt' in cacheJson) {
-					try {
-						indexJsPath = path.resolve(projectRootPath, indexJsPath);
-						// console.log('indexJsPath:', indexJsPath);
-						const indexJsStats = fs.statSync(indexJsPath);
+			// 	if ('tsIndexLastBuilt' in cacheJson) {
+			// 		try {
+			// 			// TODO change to indexTsPath + check the TYPESCRIPT last modified stat to (we would need to know / infer the index.ts path then...)
+			// 			indexJsPath = path.resolve(projectRootPath, indexJsPath);
+			// 			// console.log('indexJsPath:', indexJsPath);
+			// 			const indexJsStats = fs.statSync(indexJsPath);
 
-						const indexJsLastModified = indexJsStats.mtime; // date
-						if (cacheJson['tsIndexLastBuilt'] <= indexJsLastModified.getTime()) {
-							lastTsBuildTime = cacheJson['tsIndexLastBuilt'];
-							buildNeeded = false;
-						}
-					} catch (e) {
-						console.log('couldnt get index.ts stats');
-						throw 'no index stats';
-					}
-				} else {
-					// give up
-				}
-			} catch (e) {
-				// no cache, thats ok, just build ts -> js
-			}
+			// 			const indexJsLastModified = indexJsStats.mtime; // date
+			// 			if (cacheJson['tsIndexLastBuilt'] <= indexJsLastModified.getTime()) {
+			// 				lastTsBuildTime = cacheJson['tsIndexLastBuilt'];
+			// 				buildNeeded = false;
+			// 			}
+			// 		} catch (e) {
+			// 			console.log('couldnt get index.ts stats');
+			// 			throw 'no index stats';
+			// 		}
+			// 	} else {
+			// 		// give up
+			// 	}
+			// } catch (e) {
+			// 	// no cache, thats ok, just build ts -> js
+			// }
 
 			if (buildNeeded) {
 				const buildCommand = `npm run ${settings.tsBuildScriptName}`;
@@ -204,14 +205,13 @@ const main = async () => {
 				try {
 					const stdout = await execPromise(buildCommand);
 
-					try {
-						indexJsPath = path.resolve(projectRootPath, indexJsPath);
-						const indexJsStats = fs.statSync(indexJsPath);
-						lastTsBuildTime = indexJsStats.mtime.getTime(); // date
-					} catch (e) {
-						console.log('error writing lastTsBuildTime date time');
-					}
-
+					// try {
+					// 	indexJsPath = path.resolve(projectRootPath, indexJsPath);
+					// 	const indexJsStats = fs.statSync(indexJsPath);
+					// 	lastTsBuildTime = indexJsStats.mtime.getTime(); // date
+					// } catch (e) {
+					// 	console.log('error writing lastTsBuildTime date time');
+					// }
 				} catch (e) {
 					console.log('error building ts project');
 					if (options.debug) {
@@ -346,7 +346,7 @@ const main = async () => {
 					JSON.stringify({
 						ranFuncs: funcs,
 						allFuncs: indexExportedFuncs,
-						lastTsBuildTime: lastTsBuildTime
+						// lastTsBuildTime: lastTsBuildTime
 					}, null, '\t'),
 					function (err) {
 						if (err) return console.log(err);
