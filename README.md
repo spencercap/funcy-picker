@@ -8,8 +8,6 @@ a CLI app that lets you choose which firebase cloud functions to deploy.
 
 # usage
 
-TODO
-
 TODO - make cli inline args work (currently online settings.json work)
 
 -   default settings are:
@@ -32,9 +30,11 @@ TODO - make cli inline args work (currently online settings.json work)
   ...
 ```
 
-3. install repo's command(s) for global use:
-    - ON = `npm link`
-    - OFF = `npm unlink`
+3. **USAGE** (active this repo's cmd for global cli use)
+    - clone this repo... 
+    - then, `npm install`
+    - to turn ON: `npm run link`
+    - to turn OFF: `npm run unlink`
 
 ---
 
